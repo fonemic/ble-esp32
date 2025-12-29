@@ -73,7 +73,7 @@ async function sendCommand(cmd) {
 }
 
 // Event listeners pulsanti
-document.getElementById('btnOpen').addEventListener('click', () => sendCommand('OPEN'));
+document.getElementById('btnOpen').addEventListener('click', () => sendCommand('open'));
 document.getElementById('btnClose').addEventListener('click', () => sendCommand('CLOSE'));
 document.getElementById('btnStop').addEventListener('click', () => sendCommand('STOP'));
 document.getElementById('btnConnect').addEventListener('click', connectIfNeeded);
