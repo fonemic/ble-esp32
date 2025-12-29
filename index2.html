@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Telecomando ESP32</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    button { font-size: 22px; padding: 20px; margin: 10px; width: 200px; }
+    #status { margin: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>Telecomando ESP32</h2>
+<div id="status">Stato: Non connesso</div>
+
+<button id="btnOpen">🔓 OPEN</button>
+<button id="btnClose">⛔ CLOSE</button>
+<button id="btnStop">⏹ STOP</button>
+<button id="btnConnect">Connetti</button>
+
+<script>
+let device;
+let characteristic;
+
+const SERVICE_UUID = '12345678-1234-1234-1234-1234567890ab';
+const CHAR_UUID = 'abcd1234-5678-1234-5678-abcdef123456';
+const DEVICE_NAME = 'ESP32-TEST';
+const statusEl = document.getElementById('status');
+
+function updateStatus(text) { statusEl.textContent = 'Stato: ' + text; }
+
+async function connectIfNeeded() {
+  try {
+    if (device && device.gatt.connected) {
+      updateStatus('Connesso');
+      return;
+    }
+
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: DEVICE_NAME }],
+      optionalServices: [SERVICE_UUID]
+    });
+
+    device.addEventListener('gattserverdisconnected', () => {
+      updateStatus('Disconnesso');
+      characteristic = null;
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHAR_UUID);
+    updateStatus('Connesso');
+  } catch (err) {
+    console.error('Errore connessione:', err);
+    updateStatus('Errore connessione');
+    throw err;
+  }
+}
+
+async function sendCommand(cmd) {
+  try {
+    await connectIfNeeded();
+    if (!characteristic) { alert('Dispositivo non connesso'); return; }
+    const data = new TextEncoder().encode(cmd);
+    await characteristic.writeValue(data);
+    console.log('Comando inviato:', cmd);
+  } catch (err) {
+    console.error('Errore invio comando:', err);
+    updateStatus('Errore invio');
+  }
+}
+
+// Event listeners pulsanti
+document.getElementById('btnOpen').addEventListener('click', () => sendCommand('OPEN'));
+document.getElementById('btnClose').addEventListener('click', () => sendCommand('CLOSE'));
+document.getElementById('btnStop').addEventListener('click', () => sendCommand('STOP'));
+document.getElementById('btnConnect').addEventListener('click', connectIfNeeded);
+
+// --- GESTIONE SHORTCUT --- //
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+window.addEventListener('load', async () => {
+  const cmd = getQueryParam('cmd');
+  if (cmd) {
+    try {
+      await sendCommand(cmd.toUpperCase());
+      // opzionale: chiudi la pagina dopo invio
+      setTimeout(() => window.close(), 1000);
+    } catch(e) {
+      console.error('Errore comando da shortcut:', e);
+    }
+  }
+});
+</script>
+
+</body>
+</html>
