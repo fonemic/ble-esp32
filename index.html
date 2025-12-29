@@ -2,53 +2,119 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>ESP32 BLE</title>
+  <title>Apricancello Garage</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    button { font-size: 22px; padding: 20px; margin: 10px; width: 200px; }
+    #status { margin: 20px; font-weight: bold; }
+  </style>
 </head>
-<body style="font-family:sans-serif;text-align:center">
+<body>
 
-<h2>Apricancello Garage 2</h2>
+<h2>Apricancello Garage</h2>
+<div id="status">Stato: Non connesso</div>
 
-<button onclick="connect()" style="font-size:20px;padding:20px">
-CONNETTI
-</button>
-
-<br><br>
-
-<button onclick="send()" style="font-size:24px;padding:30px">
-🔓 APRI
-</button>
-
+<button id="btnConnect">Connetti</button>
+<button id="btnOpen">Apri</button>
+<button id="btnRefresh">Ricarica</button>
+  
 <script>
+let device;
 let characteristic;
 
-async function connect() {
-  const device = await navigator.bluetooth.requestDevice({
-    filters: [{ name: 'Cancello_BLE' }],
-    optionalServices: ['12345678-1234-1234-1234-1234567890ab']
-  });
+const SERVICE_UUID = '12345678-1234-1234-1234-1234567890ab';
+const CHAR_UUID = 'abcd1234-ab12-cd34-ef56-abcdef123456';
+const DEVICE_NAME = 'Cancello_BLE';
 
-  const server = await device.gatt.connect();
-  const service = await server.getPrimaryService(
-    '12345678-1234-1234-1234-1234567890ab'
-  );
-
-  characteristic = await service.getCharacteristic(
-    'abcd1234-ab12-cd34-ef56-abcdef123456'
-  );
-
-  alert("Connesso!");
+const statusEl = document.getElementById('status');
+function updateStatus(text) { 
+  statusEl.textContent = 'Stato: ' + text; 
 }
 
-async function send() {
-  if (!characteristic) {
-    alert("Non connesso");
-    return;
+const btnConnect = document.getElementById('btnConnect');
+function updateConnectionButtonStatus(isConnected) {
+  btnConnect.disabled = isConnected;
+}
+  
+async function connectIfNeeded() {
+  try {
+    if (device && device.gatt.connected) {
+      updateStatus('Connesso');
+      updateConnectionButtonStatus(true);
+      return;
+    }
+
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: DEVICE_NAME }],
+      optionalServices: [SERVICE_UUID]
+    });
+
+    device.addEventListener('gattserverdisconnected', () => {
+      updateStatus('Disconnesso');
+      updateConnectionButtonStatus(false);
+      characteristic = null;
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHAR_UUID);
+    updateStatus('Connesso');
+    updateConnectionButtonStatus(true);
+  } catch (err) {
+    console.error('Errore connessione:', err);
+    updateStatus('Errore connessione');
+    updateConnectionButtonStatus(false);
+    throw err;
   }
-  await characteristic.writeValue(
-    new TextEncoder().encode("open")
-  );
 }
+
+async function sendCommand(cmd) {
+  try {
+    await connectIfNeeded();
+    if (!characteristic) { alert('Dispositivo non connesso'); return; }
+    const data = new TextEncoder().encode(cmd);
+    await characteristic.writeValue(data);
+    console.log('Comando inviato:', cmd);
+  } catch (err) {
+    console.error('Errore invio comando:', err);
+    updateStatus('Errore invio');
+  }
+}
+
+// Event listeners pulsanti
+document.getElementById('btnOpen').addEventListener('click', () => sendCommand('open'));
+//document.getElementById('btnClose').addEventListener('click', () => sendCommand('CLOSE'));
+//document.getElementById('btnStop').addEventListener('click', () => sendCommand('STOP'));
+document.getElementById('btnConnect').addEventListener('click', connectIfNeeded);
+document.getElementById('btnRefresh').addEventListener('click', () => {location.reload(); });
+  
+// --- GESTIONE SHORTCUT --- //
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+window.addEventListener('load', async () => {
+
+  // Comando OPEN automatico all'apertura pagina
+  try {
+    await sendCommand('open');
+  } catch(e) {
+    console.error('Errore comando OPEN automatico:', e);
+  }
+  
+  const cmd = getQueryParam('cmd');
+  if (cmd) {
+    try {
+      await sendCommand(cmd.toUpperCase());
+      // opzionale: chiudi la pagina dopo invio
+      setTimeout(() => window.close(), 1000);
+    } catch(e) {
+      console.error('Errore comando da shortcut:', e);
+    }
+  }
+});
 </script>
 
 </body>
