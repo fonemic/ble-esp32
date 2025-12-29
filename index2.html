@@ -19,7 +19,8 @@
 <button id="btnClose">⛔ CLOSE</button>
 <button id="btnStop">⏹ STOP</button>
 <button id="btnConnect">Connetti</button>
-
+<button id="btnRefresh">🔄 Refresh</button>
+  
 <script>
 let device;
 let characteristic;
@@ -77,7 +78,8 @@ document.getElementById('btnOpen').addEventListener('click', () => sendCommand('
 document.getElementById('btnClose').addEventListener('click', () => sendCommand('CLOSE'));
 document.getElementById('btnStop').addEventListener('click', () => sendCommand('STOP'));
 document.getElementById('btnConnect').addEventListener('click', connectIfNeeded);
-
+document.getElementById('btnRefresh').addEventListener('click', () => {location.reload(); });
+  
 // --- GESTIONE SHORTCUT --- //
 function getQueryParam(param) {
   const urlParams = new URLSearchParams(window.location.search);
