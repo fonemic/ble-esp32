@@ -41,10 +41,10 @@ async function connect() {
 }
 
 async function send() {
-  if (!characteristic) {
-    alert("Non connesso");
-    return;
-  }
+//  if (!characteristic) {
+//    alert("Non connesso");
+//    return;
+//  }
   await characteristic.writeValue(
     new TextEncoder().encode("open")
   );
