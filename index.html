@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ESP32 BLE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family:sans-serif;text-align:center">
+
+<h2>Apricancello Garage</h2>
+
+<button onclick="connect()" style="font-size:20px;padding:20px">
+Connetti
+</button>
+
+<br><br>
+
+<button onclick="send()" style="font-size:24px;padding:30px">
+🔓 APRI
+</button>
+
+<script>
+let characteristic;
+
+async function connect() {
+  const device = await navigator.bluetooth.requestDevice({
+    filters: [{ name: 'ESP32-CANCELLO' }],
+    optionalServices: ['12345678-1234-1234-1234-1234567890ab']
+  });
+
+  const server = await device.gatt.connect();
+  const service = await server.getPrimaryService(
+    '12345678-1234-1234-1234-1234567890ab'
+  );
+
+  characteristic = await service.getCharacteristic(
+    'abcd1234-5678-1234-5678-abcdef123456'
+  );
+
+  alert("Connesso!");
+}
+
+async function send() {
+  if (!characteristic) {
+    alert("Non connesso");
+    return;
+  }
+  await characteristic.writeValue(
+    new TextEncoder().encode("OPEN")
+  );
+}
+</script>
+
+</body>
+</html>
