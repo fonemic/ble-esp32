@@ -15,11 +15,10 @@
 <h2>Telecomando ESP32</h2>
 <div id="status">Stato: Non connesso</div>
 
-<button id="btnOpen">🔓 OPEN</button>
-<button id="btnClose">⛔ CLOSE</button>
-<button id="btnStop">⏹ STOP</button>
-<button id="btnConnect">Connetti</button>
-<button id="btnRefresh">🔄 Refresh</button>
+<button width="100%" id="btnConnect">Connect</button>
+<button width="100%" id="btnOpen">Open</button>
+<hr>
+<button width="100%" id="btnRefresh">🔄 Refresh</button>
   
 <script>
 let device;
@@ -90,7 +89,7 @@ window.addEventListener('load', async () => {
 
   // Comando OPEN automatico all'apertura pagina
   try {
-    await sendCommand('OPEN');
+    await sendCommand('open');
   } catch(e) {
     console.error('Errore comando OPEN automatico:', e);
   }
