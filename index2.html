@@ -15,9 +15,9 @@
 <h2>Apricancello Garage</h2>
 <div id="status">Stato: Non connesso</div>
 
-<button id="btnConnect">Connect</button>
-<button id="btnOpen">Open</button>
-<button id="btnRefresh">Refresh</button>
+<button id="btnConnect">Connetti</button>
+<button id="btnOpen">Apri</button>
+<button id="btnRefresh">Ricarica</button>
   
 <script>
 let device;
@@ -26,14 +26,22 @@ let characteristic;
 const SERVICE_UUID = '12345678-1234-1234-1234-1234567890ab';
 const CHAR_UUID = 'abcd1234-ab12-cd34-ef56-abcdef123456';
 const DEVICE_NAME = 'Cancello_BLE';
+
 const statusEl = document.getElementById('status');
+function updateStatus(text) { 
+  statusEl.textContent = 'Stato: ' + text; 
+}
 
-function updateStatus(text) { statusEl.textContent = 'Stato: ' + text; }
-
+const btnConnect = document.getElementById('btnConnect');
+function updateConnectionButtonStatus(isConnected) {
+  btnConnect.disabled = isConnected;
+}
+  
 async function connectIfNeeded() {
   try {
     if (device && device.gatt.connected) {
       updateStatus('Connesso');
+      updateConnectionButtonStatus(true);
       return;
     }
 
@@ -44,6 +52,7 @@ async function connectIfNeeded() {
 
     device.addEventListener('gattserverdisconnected', () => {
       updateStatus('Disconnesso');
+      updateConnectionButtonStatus(false);
       characteristic = null;
     });
 
@@ -51,9 +60,11 @@ async function connectIfNeeded() {
     const service = await server.getPrimaryService(SERVICE_UUID);
     characteristic = await service.getCharacteristic(CHAR_UUID);
     updateStatus('Connesso');
+    updateConnectionButtonStatus(true);
   } catch (err) {
     console.error('Errore connessione:', err);
     updateStatus('Errore connessione');
+    updateConnectionButtonStatus(false);
     throw err;
   }
 }
