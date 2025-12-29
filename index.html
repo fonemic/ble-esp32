@@ -24,7 +24,7 @@ let characteristic;
 
 async function connect() {
   const device = await navigator.bluetooth.requestDevice({
-    filters: [{ name: 'ESP32-CANCELLO' }],
+    filters: [{ name: 'Cancello_BLE' }],
     optionalServices: ['12345678-1234-1234-1234-1234567890ab']
   });
 
@@ -46,7 +46,7 @@ async function send() {
     return;
   }
   await characteristic.writeValue(
-    new TextEncoder().encode("OPEN")
+    new TextEncoder().encode("open")
   );
 }
 </script>
