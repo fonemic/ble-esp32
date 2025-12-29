@@ -87,6 +87,14 @@ function getQueryParam(param) {
 }
 
 window.addEventListener('load', async () => {
+
+  // Comando OPEN automatico all'apertura pagina
+  try {
+    await sendCommand('OPEN');
+  } catch(e) {
+    console.error('Errore comando OPEN automatico:', e);
+  }
+  
   const cmd = getQueryParam('cmd');
   if (cmd) {
     try {
